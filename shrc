@@ -1,0 +1,102 @@
+#!/bin/sh
+
+#. ~/.profile 2> /dev/null
+
+# 环境变量 {{{
+export EDITOR="vim"
+export PATH=~/.local/bin:$PATH
+
+# ccache
+if [[ -x "/usr/bin/ccache" ]]; then
+    export CCACHE_DIR="/var/ccache/"
+    export CCACHE_UMASK=002
+    export CCACHE_LOGFILE="/var/ccache/ccache.log"
+fi
+
+# wine
+if [[ -x "/usr/bin/wine" ]]; then
+    export WINEARCH=win32
+    alias wine='env LIBGL_DRIVERS_PATH=/usr/lib32/xorg/modules/dri wine'
+fi
+#}}}
+
+# 命令别名 {{{
+alias man='man -P less'
+alias l='ls -F --color=auto'
+alias ls='ls -F --color=auto'
+alias grep='grep --color=auto'
+alias cp='cp -i'
+alias mv='mv -i'
+alias rm='rm -i'
+alias gcc='gcc -Wall'
+alias g++='g++ -Wall'
+alias sshno='ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile /dev/null"'
+#}}}
+
+# 搜索丢失依赖库的文件
+missing_so () {
+    solist=""
+
+    find $1 -executable -type f | while read f
+    do
+        ans=$(LC_ALL=C ldd $f 2> /dev/null | grep "not found") && \
+            solist="$solist$ans\n" && echo -e "$f\n$ans"
+    done
+    
+    echo -ne "\nmissing libraries:"
+    echo $solist | sed -e "s/ => not found//" -e "s/\t//" | sort -u
+
+    return 0
+}
+
+
+# 清理wine垃圾
+wineclean() {
+    rm ~/.local/share/mime/packages/x-wine* -vf
+    rm ~/.local/share/applications/wine-extension* -vf
+    rm ~/.local/share/icons/hicolor/*/*/application-x-wine-extension* -vf
+    rm ~/.local/share/mime/application/x-wine-extension* -vf
+    return 0
+}
+
+
+# 清理旧版本的arch软件包
+pacclean () {
+    find "$1" -maxdepth 1 -type f -name *.pkg.tar* | sort | while read f
+    do
+        curr=$(basename $f | sed 's/-[[:digit:]][^-]*-[[:digit:]]-\w*.pkg.tar.[^.]*$//')
+        test "$curr" = "$pre" && rm -vf "$pref"
+        pre=$curr
+        pref=$f
+    done
+
+    return 0
+}
+
+fastchroot () {
+    test -d "$1" || return 1
+    sudo mount -t proc none "$1/proc"
+    sudo mount -t sysfs none "$1/sys"
+    sudo mount -o bind /dev "$1/dev"
+    sudo mount -o bind /dev/pts "$1/dev/pts"
+    sudo chroot "$1" /bin/bash
+    sudo umount "$1/dev/pts"
+    sudo umount "$1/dev"
+    sudo umount "$1/sys"
+    sudo umount "$1/proc"
+}
+
+iconv2gb ()
+{
+    mv "$1" "$1.bk"
+    iconv -t GB18030 "$1.bk" > "$1" || return 1
+    rm -f "$1.bk"
+}
+
+uploadpic () {
+    curl -F "name=@$1" https://img.vim-cn.com/
+}
+
+dateat () {
+    date --date=@$1
+}
