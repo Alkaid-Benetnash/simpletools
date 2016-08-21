@@ -65,6 +65,7 @@ my $use_remote_ip = 'proxy';
 
 my $family = 'prefer-inet';
 my $port_request = undef;
+my $port_nat = undef;
 
 my @ssh = ('ssh');
 
@@ -146,6 +147,7 @@ GetOptions( 'client=s' => \$client,
 	    '4' => sub { $family = 'inet' },
 	    '6' => sub { $family = 'inet6' },
 	    'p=s' => \$port_request,
+		'port_nat=s' => \$port_nat,
 	    'ssh=s' => sub { @ssh = shellwords($_[1]); },
 	    'init!' => \$term_init,
 	    'local' => \$localhost,
@@ -429,6 +431,9 @@ if ( $pid == 0 ) { # child
   $ENV{ 'MOSH_KEY' } = $key;
   $ENV{ 'MOSH_PREDICTION_DISPLAY' } = $predict;
   $ENV{ 'MOSH_NO_TERM_INIT' } = '1' if !$term_init;
+  if (defined $port_nat) {
+	  $port = $port_nat
+  }
   exec {$client} ("$client", "-# @cmdline |", $ip, $port);
 }
 
