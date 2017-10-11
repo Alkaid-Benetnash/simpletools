@@ -66,6 +66,7 @@ my $use_remote_ip = 'proxy';
 my $family = 'prefer-inet';
 my $port_request = undef;
 my $port_nat = undef;
+my $ip_nat = undef;
 
 my @ssh = ('ssh');
 
@@ -148,6 +149,7 @@ GetOptions( 'client=s' => \$client,
 	    '6' => sub { $family = 'inet6' },
 	    'p=s' => \$port_request,
 		'port_nat=s' => \$port_nat,
+		'ip_nat=s' => \$ip_nat,
 	    'ssh=s' => sub { @ssh = shellwords($_[1]); },
 	    'init!' => \$term_init,
 	    'local' => \$localhost,
@@ -431,10 +433,21 @@ if ( $pid == 0 ) { # child
   $ENV{ 'MOSH_KEY' } = $key;
   $ENV{ 'MOSH_PREDICTION_DISPLAY' } = $predict;
   $ENV{ 'MOSH_NO_TERM_INIT' } = '1' if !$term_init;
+  my $client_port = undef;
+  my $client_ip = undef;
   if (defined $port_nat) {
-	  $port = $port_nat
+	  $client_port = $port_nat
   }
-  exec {$client} ("$client", "-# @cmdline |", $ip, $port);
+  else{
+	  $client_port = $port
+  }
+  if (defined $ip_nat) {
+	  $client_ip = $ip_nat
+  }
+  else{
+	  $client_ip = $ip
+  }
+  exec {$client} ("$client", "-# @cmdline |", $client_ip, $client_port);
 }
 
 sub shell_quote { join ' ', map {(my $a = $_) =~ s/'/'\\''/g; "'$a'"} @_ }
