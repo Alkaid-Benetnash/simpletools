@@ -2,12 +2,21 @@
 
 import sys
 import json
+import gzip
 
 def main(fa, fb):
-  with open(fa, errors='replace') as f:
-    a = json.load(f)
-  with open(fb, errors='replace') as f:
-    b = json.load(f)
+  if fa.rsplit('.',1)[-1] == 'gz':
+      with gzip.open(fa) as f:
+          a= json.load(f)
+  else:
+      with open(fa, errors='replace') as f:
+          a = json.load(f)
+  if fb.rsplit('.',1)[-1] == 'gz':
+      with gzip.open(fb) as f:
+          b = json.load(f)
+  else:
+      with open(fb, errors='replace') as f:
+          b = json.load(f)
 
   a[3][0]['name'] = '/'
   b[3][0]['name'] = '/'
