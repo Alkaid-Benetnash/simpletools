@@ -2,18 +2,38 @@
 set -e
 print_help() {
 	echo "usage: $0 source_file target_file"
+	echo "env FPS, SCALE, GEN, USE"
+	echo "FFARG: ffmpeg parameters"
 }
+DEFAULT_SCALE=320
+DEFAULT_FPS=15
+DEFAULT_GEN='stats_mode=diff'
+DEFAULT_USE='dither=sierra2'
 
 if (($# < 2)); then
 	print_help
 	exit
 fi
+if [ -z $SCALE ]; then
+	echo Use default scale $DEFAULT_SCALE
+	SCALE=$DEFAULT_SCALE
+fi
+if [ -z $FPS ]; then
+	echo Use default fps $DEFAULT_FPS
+	FPS=$DEFAULT_FPS
+fi
+if [ -z $GEN ]; then
+	echo Use default palettegen $DEFAULT_GEN
+	GEN=$DEFAULT_GEN
+fi
+if [ -z $USE ]; then
+	echo Use default paletteuse $DEFAULT_USE
+	USE=$DEFAULT_USE
+fi
+palette="palette.png"
+filters="fps=$FPS,scale=$SCALE:-1:flags=lanczos"
 
-palette="/tmp/palette.png"
-
-filters="fps=15,scale=320:-1:flags=lanczos"
-
-ffmpeg -v warning -i $1 -vf "$filters,palettegen" -y $palette
-ffmpeg -v warning -i $1 -i $palette -lavfi "$filters [x]; [x][1:v] paletteuse" -y $2
+ffmpeg -v warning $FFARG -i $1 -vf "$filters,palettegen=$GEN" -y $palette
+ffmpeg -v warning $FFARG -i $1 -i $palette -lavfi "$filters [x]; [x][1:v] paletteuse=$USE" -y $2
 rm $palette
 
