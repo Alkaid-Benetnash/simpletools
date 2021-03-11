@@ -1,0 +1,3 @@
+pybex
+textdistance
+requests
