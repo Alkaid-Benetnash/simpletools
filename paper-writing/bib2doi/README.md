@@ -19,3 +19,4 @@ In `stdout`, the tool will report whether it is able to find a matching doi for 
 ### TODO
 
 1. Support new API. It currently uses the backend API of [zbib](https://zbib.org). The API of [crossref.org](https://github.com/CrossRef/rest-api-doc) should be better.
+2. Switch the bibtex engine to https://github.com/sciunto-org/python-bibtexparser
