@@ -14,7 +14,31 @@ from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.filesystems import UnixFilesystem
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
+from asynchat import async_chat
 
+encoding = "utf8"
+class EncodedProducer:
+    def __init__(self, producer):
+        self.producer = producer
+    def more(self):
+        return self.producer.more().decode("utf8").encode(encoding)
+
+class EncodedHandler(FTPHandler):
+
+    def push(self, s):
+        async_chat.push(self, s.encode(encoding))
+
+    def push_dtp_data(self, data, isproducer=False, file=None, cmd=None):
+        if file==None:
+            if isproducer:
+                data=EncodedProducer(data)
+            else:
+                data=data.decode("utf8").encode(encoding)
+
+        FTPHandler.push_dtp_data(self, data, isproducer, file, cmd)
+
+    def decode(self, bytes):
+        return bytes.decode(encoding, self.unicode_errors)
 
 def main():
     authorizer = DummyAuthorizer()
@@ -35,8 +59,8 @@ def main():
         "T" = change file modification time (SITE MFMT command) New in 1.5.3
     """
     authorizer.add_user('admin', 'adminpassword', '.', perm='elrafmwMT')
-    authorizer.add_anonymous('/mnt/Data_Dual')
-    handler = FTPHandler
+    authorizer.add_anonymous('/tmp')
+    handler = EncodedHandler
     handler.authorizer = authorizer
     handler.abstracted_fs = UnixFilesystem
     server = FTPServer(('', 2121), handler)
