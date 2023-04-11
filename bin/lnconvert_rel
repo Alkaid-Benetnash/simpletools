@@ -1,0 +1,19 @@
+#!/bin/sh
+# Usage: $0 root_dir
+#
+# Convert every symlink file in the root_dir (recursively) to use relative path
+# 
+# Note that current version will just print a list of `ln` commands instead of
+# executing them directly. Users are welcome to apply further filtering before
+# executing those commands.
+#
+ROOTDIR=.
+if [ -z "$1" ]; then
+  ROOTDIR=$1
+fi
+find ${ROOTDIR} -type l | while read l; do
+  target="$(realpath -m "$l")";
+  # ln -T is to deal symlinked directory
+  # realpath -m is to allow the target file missing (i.e., broken symlink)
+  echo ln -Tfs "$(realpath -m --relative-to="$(dirname "$(realpath -ms "$l")")" "$target")" "$l";
+done
