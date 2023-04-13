@@ -15,6 +15,8 @@ from pyftpdlib.filesystems import UnixFilesystem
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
 from asynchat import async_chat
+import argparse
+from pathlib import Path
 
 encoding = "utf8"
 class EncodedProducer:
@@ -41,6 +43,9 @@ class EncodedHandler(FTPHandler):
         return bytes.decode(encoding, self.unicode_errors)
 
 def main():
+    parser = argparse.ArgumentParser(description="simple ftp server")
+    parser.add_argument('-d', '--dir', type=Path, default=".", help="Dir of the ftp server (default: %(default)s)")
+    args = parser.parse_args()
     authorizer = DummyAuthorizer()
     """
     Read permissions:
@@ -58,8 +63,9 @@ def main():
         "M" = change file mode / permission (SITE CHMOD command) New in 0.7.0
         "T" = change file modification time (SITE MFMT command) New in 1.5.3
     """
-    authorizer.add_user('admin', 'adminpassword', '.', perm='elrafmwMT')
-    authorizer.add_anonymous('/tmp')
+    authorizer.add_user('admin', 'adminpassword', str(args.dir), perm='elrafmwMT')
+    authorizer.add_anonymous(str(args.dir))
+    #handler = FTPHandler
     handler = EncodedHandler
     handler.authorizer = authorizer
     handler.abstracted_fs = UnixFilesystem
