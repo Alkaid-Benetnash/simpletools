@@ -1,0 +1,2 @@
+#!/bin/bash
+inkscape $1 --export-type=pdf -o $2
