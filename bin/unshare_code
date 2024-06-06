@@ -1,0 +1,6 @@
+#!/bin/bash
+# This script is used to launch vscode with a cutomized TMPDIR, which will avoid
+# letting cpp languagetools waste /tmp space to host edg0 caches.
+# See also https://github.com/microsoft/vscode-cpptools/issues/12288
+#sudo -E unshare --mount zsh -c "mount --bind ${HOME}/tmp /tmp && su ${USER} -c code "
+TMPDIR=${HOME}/tmp code
